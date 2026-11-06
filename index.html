@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Udang Vaname - SaaS Modern</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        ocean: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-ocean-600 to-ocean-400 p-2.5 rounded-xl text-white shadow-md shadow-ocean-500/20">
+                    <i data-lucide="waves" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-ocean-800 to-ocean-600 bg-clip-text text-transparent">
+                        Kalkulator Udang Vaname
+                    </h1>
+                    <p class="text-xs text-slate-500 hidden sm:block">Sistem Simulasi Usaha & Proyeksi Finansial Otomatis</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Live Calculation
+                </span>
+                <button onclick="resetDefaults()" class="p-2 text-slate-500 hover:text-ocean-600 hover:bg-slate-100 rounded-lg transition" title="Reset Data Default">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- LEFT COLUMN: INPUT PANEL (Width 4/12) -->
+        <aside class="lg:col-span-4 space-y-5">
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="sliders" class="w-5 h-5 text-ocean-600"></i>
+                        <h2 class="font-semibold text-slate-800">Input Parameter Usaha</h2>
+                    </div>
+                    <span class="text-xs bg-ocean-50 text-ocean-700 font-medium px-2 py-0.5 rounded">Sel Kuning Spreadsheet</span>
+                </div>
+
+                <form id="calcForm" class="space-y-4" onsubmit="event.preventDefault();">
+                    
+                    <!-- Accordion 1: Tambak & Dimensi -->
+                    <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50">
+                        <h3 class="text-xs font-bold text-ocean-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                            <i data-lucide="box" class="w-3.5 h-3.5 text-ocean-500"></i> Dimensi Tambak
+                        </h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Panjang (m)</label>
+                                <input type="number" id="panjang" value="12" step="0.1" class="w-full bg-amber-50 border border-amber-300 focus:border-ocean-500 focus:ring-1 focus:ring-ocean-500 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800" oninput="calculateAll()">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Lebar (m)</label>
+                                <input type="number" id="lebar" value="10" step="0.1" class="w-full bg-amber-50 border border-amber-300 focus:border-ocean-500 focus:ring-1 focus:ring-ocean-500 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800" oninput="calculateAll()">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Kedalaman Air (m)</label>
+                                <input type="number" id="kedalaman" value="1.5" step="0.1" class="w-full bg-amber-50 border border-amber-300 focus:border-ocean-500 focus:ring-1 focus:ring-ocean-500 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800" oninput="calculateAll()">
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-2 border-t border-slate-200/60 flex justify-between text-xs text-slate-600">
+                            <span>Luas: <strong id="outLuas" class="text-ocean-700">120 m²</strong></span>
+                            <span>Vol: <strong id="outVolume" class="text-ocean-700">180 m³</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- Accordion 2: Benur & Tebar -->
+                    <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50">
+                        <h3 class="text-xs font-bold text-ocean-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                            <i data-lucide="git-commit" class="w-3.5 h-3.5 text-ocean-500"></i> Mode Benur & Kepadatan
+                        </h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Mode Input Benur</label>
+                                <select id="modeBenur" class="w-full bg-amber-50 border border-amber-300 focus:border-ocean-500 focus:ring-1 focus:ring-ocean-500 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800" onchange="toggleBenurMode(); calculateAll();">
+                                    <option value="Ukuran Tambak" selected>Ukuran Tambak (Kepadatan × Luas)</option>
+                                    <option value="Manual">Manual (Isi Sendiri Ekor)</option>
+                                </select>
+                            </div>
+
+                            <div id="containerKepadatan">
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Kepadatan Tebar (ekor/m²)</label>
+                                <input type="number" id="kepadatan" value="100" class="w-full bg-amber-50 border border-amber-300 focus:border-ocean-500 focus:ring-1 focus:ring-ocean-500 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800" oninput="calculateAll()">
+                            </div>
+
+                            <div id="containerBenurManual" class="hidden">
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Jumlah Benur Manual (ekor)</label>
+                                <input type="number" id="benurManual" value="12000" class="w-full bg-amber-50 border border-amber-300 focus:border-ocean-500 focus:ring-1 focus:ring-ocean-500 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800" oninput="calculateAll()">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Harga Benur / ekor (Rp)</label>
+                                <input type="number" id="hargaBenur" value="40" class="w-full bg-amber-50 border border-amber-300 focus:border-ocean-500 focus:ring-1 focus:ring-ocean-500 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800" oninput="calculateAll()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Accordion 3: Target Biologis & Operasional -->
+                    <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50">
+                        <h3 class="text-xs font-bold text-ocean-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                            <i data-lucide="target" class="w-3.5 h-3.5 text-ocean-500"></i> Target Biologis & Panen
+                        </h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Target SR (%)</label>
+                                <input type="number" id="targetSR" value="85" max="100" min="1" class="w-full bg-amber-50 border border-amber-300 focus:border-ocean-500 focus:ring-1 focus:ring-ocean-500 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800" oninput="calculateAll()">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Target FCR</label>
+                                <input type="number" id="targetFCR" value="1.2" step="0.05" class="w-full bg-amber-50 border border-amber-300 focus:border-ocean-500 focus:ring-1 focus:ring-ocean-500 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800" oninput="calculateAll()">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Target Size (ekor/kg)</label>
+                                <input type="number" id="targetSize" value="50" class="w-full bg-amber-50 border border-amber-300 focus:border-ocean-500 focus:ring-1 focus:ring-ocean-500 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800" oninput="calculateAll()">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Lama DOC (Hari)</label>
+                                <input type="number" id="lamaDOC" value="90" class="w-full bg-amber-50 border border-amber-300 focus:border-ocean-500 focus:ring-1 focus:ring-ocean-500 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800" oninput="calculateAll()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Accordion 4: Harga Pasar & Modal -->
+                    <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50">
+                        <h3 class="text-xs font-bold text-ocean-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                            <i data-lucide="dollar-sign" class="w-3.5 h-3.5 text-ocean-500"></i> Harga & Biaya Investasi
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">Harga Pakan/kg (Rp)</label>
+                                    <input type="number" id="hargaPakan" value="17500" class="w-full bg-amber-50 border border-amber-300 focus:border-ocean-500 focus:ring-1 focus:ring-ocean-500 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800" oninput="calculateAll()">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">Harga Jual Udang/kg</label>
+                                    <input type="number" id="hargaJual" value="75000" class="w-full bg-amber-50 border border-amber-300 focus:border-ocean-500 focus:ring-1 focus:ring-ocean-500 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800" oninput="calculateAll()">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">Total CAPEX (Modal Alat)</label>
+                                    <input type="number" id="biayaCapex" value="15000000" class="w-full bg-amber-50 border border-amber-300 focus:border-ocean-500 focus:ring-1 focus:ring-ocean-500 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800" oninput="calculateAll()">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">OPEX Tetap / Siklus</label>
+                                    <input type="number" id="biayaOpexTetap" value="3500000" class="w-full bg-amber-50 border border-amber-300 focus:border-ocean-500 focus:ring-1 focus:ring-ocean-500 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800" oninput="calculateAll()">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </aside>
+
+        <!-- RIGHT COLUMN: DASHBOARD & ANALYTICS (Width 8/12) -->
+        <main class="lg:col-span-8 space-y-6">
+            
+            <!-- Tab Navigation Header -->
+            <div class="bg-white p-1.5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-2 overflow-x-auto">
+                <button onclick="switchTab('analisis')" id="tab-analisis" class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold text-ocean-700 bg-ocean-50 transition flex items-center gap-2">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Analisis & Kelayakan
+                </button>
+                <button onclick="switchTab('proyeksi')" id="tab-proyeksi" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 transition flex items-center gap-2">
+                    <i data-lucide="line-chart" class="w-4 h-4"></i> Proyeksi Pakan & Panen
+                </button>
+                <button onclick="switchTab('biaya')" id="tab-biaya" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 transition flex items-center gap-2">
+                    <i data-lucide="receipt" class="w-4 h-4"></i> Biaya CAPEX & OPEX
+                </button>
+                <button onclick="switchTab('multisiklus')" id="tab-multisiklus" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 transition flex items-center gap-2">
+                    <i data-lucide="repeat" class="w-4 h-4"></i> Multi-Siklus Cash Flow
+                </button>
+            </div>
+
+            <!-- TAB 1: ANALISIS HASIL & FINANSIAL -->
+            <div id="content-analisis" class="tab-content space-y-5">
+                
+                <!-- KPI Highlight Cards Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+                        <span class="text-xs font-medium text-slate-500 block mb-1">Populasi Tebar</span>
+                        <div class="text-lg font-bold text-slate-800" id="kpiPopulasiTebar">12.000 ekor</div>
+                        <span class="text-[11px] text-ocean-600 font-medium" id="kpiLuasKepadatan">120m² × 100/m²</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+                        <span class="text-xs font-medium text-slate-500 block mb-1">Biomassa Panen</span>
+                        <div class="text-lg font-bold text-ocean-600" id="kpiBiomassa">204,0 kg</div>
+                        <span class="text-[11px] text-slate-500" id="kpiPopulasiPanen">Populasi: 10.200 ekor</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+                        <span class="text-xs font-medium text-slate-500 block mb-1">Total Pakan (kg)</span>
+                        <div class="text-lg font-bold text-amber-600" id="kpiTotalPakan">244,8 kg</div>
+                        <span class="text-[11px] text-slate-500" id="kpiFCRVal">Target FCR: 1,20</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+                        <span class="text-xs font-medium text-slate-500 block mb-1">Estimasi Revenue</span>
+                        <div class="text-lg font-bold text-emerald-600" id="kpiRevenue">Rp 15.300.000</div>
+                        <span class="text-[11px] text-slate-500">Harga Rp 75.000/kg</span>
+                    </div>
+                </div>
+
+                <!-- Financial Health Summary Card -->
+                <div class="bg-gradient-to-br from-ocean-900 to-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                    <div class="absolute right-0 top-0 translate-x-1/4 -translate-y-1/4 opacity-10 pointer-events-none">
+                        <i data-lucide="waves" class="w-96 h-96 text-white"></i>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-700/60">
+                        <div>
+                            <span class="text-xs font-semibold uppercase tracking-wider text-ocean-300">Estimasi Laba Bersih / Siklus</span>
+                            <div class="text-3xl sm:text-4xl font-extrabold text-white mt-1" id="kpiLabaBersih">Rp 6.784.000</div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="bg-white/10 backdrop-blur px-4 py-2 rounded-xl text-center">
+                                <span class="text-[10px] text-slate-300 uppercase block">ROI %</span>
+                                <span class="text-lg font-bold text-emerald-400" id="kpiROI">45.2%</span>
+                            </div>
+                            <div class="bg-white/10 backdrop-blur px-4 py-2 rounded-xl text-center">
+                                <span class="text-[10px] text-slate-300 uppercase block">B/C Ratio</span>
+                                <span class="text-lg font-bold text-ocean-300" id="kpiBCRatio">1.80</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
+                        <div class="bg-white/5 rounded-xl p-3 border border-white/10">
+                            <span class="text-xs text-slate-400 block">BEP Harga</span>
+                            <span class="text-base font-bold text-slate-200" id="kpiBEPHarga">Rp 41.745 / kg</span>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Batas aman modal per kg</p>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-3 border border-white/10">
+                            <span class="text-xs text-slate-400 block">BEP Hasil (Kg)</span>
+                            <span class="text-base font-bold text-slate-200" id="kpiBEPUnit">113,5 kg</span>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Minimal hasil panen break-even</p>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-3 border border-white/10">
+                            <span class="text-xs text-slate-400 block">Payback Period</span>
+                            <span class="text-base font-bold text-emerald-300" id="kpiPaybackPeriod">2.2 Siklus</span>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Pengembalian modal CAPEX</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Summary Analysis -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                        <h3 class="font-semibold text-slate-800 text-sm">Rincian KPI Usaha Udang</h3>
+                        <span class="text-xs text-slate-400">Terhitung Otomatis</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 text-slate-600 text-xs uppercase font-semibold">
+                                <tr>
+                                    <th class="px-5 py-3">Indikator Metrik</th>
+                                    <th class="px-5 py-3">Nilai Kalkulasi</th>
+                                    <th class="px-5 py-3">Keterangan / Rumus</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-slate-700">
+                                <tr>
+                                    <td class="px-5 py-3 font-medium">Estimasi Udang Hidup (Panen)</td>
+                                    <td class="px-5 py-3 font-bold text-slate-900" id="rowEkorsPanen">10.200 ekor</td>
+                                    <td class="px-5 py-3 text-xs text-slate-500">Populasi Tebar × Target SR (%)</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-5 py-3 font-medium">Biomassa Panen (kg)</td>
+                                    <td class="px-5 py-3 font-bold text-slate-900" id="rowBiomassa">204,0 kg</td>
+                                    <td class="px-5 py-3 text-xs text-slate-500">Populasi Panen / Target Size (50 ekor/kg)</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-5 py-3 font-medium">Total Kebutuhan Pakan (kg)</td>
+                                    <td class="px-5 py-3 font-bold text-slate-900" id="rowTotalPakan">244,8 kg</td>
+                                    <td class="px-5 py-3 text-xs text-slate-500">Biomassa Panen × FCR (1.20)</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-5 py-3 font-medium">Total Biaya Operasional (OPEX)</td>
+                                    <td class="px-5 py-3 font-bold text-slate-900" id="rowOpexTotal">Rp 8.516.000</td>
+                                    <td class="px-5 py-3 text-xs text-slate-500">Benur + Pakan + Biaya Operasional Tetap</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-5 py-3 font-medium">Laba Bersih Per Siklus</td>
+                                    <td class="px-5 py-3 font-bold text-emerald-600" id="rowLabaBersih">Rp 6.784.000</td>
+                                    <td class="px-5 py-3 text-xs text-slate-500">Total Revenue - Total OPEX</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- TAB 2: PROYEKSI PAKAN & PANEN (CHARTS & TIMELINE) -->
+            <div id="content-proyeksi" class="tab-content hidden space-y-5">
+                <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="font-semibold text-slate-800 text-sm">Grafik Pertumbuhan ABW & Kumulatif Pakan</h3>
+                            <p class="text-xs text-slate-500">Simulasi pertumbuhan bobot rata-rata (g) & konsumsi pakan (kg) selama masa DOC</p>
+                        </div>
+                    </div>
+                    <div class="h-72 w-full">
+                        <canvas id="docChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center">
+                        <h3 class="font-semibold text-slate-800 text-sm">Proyeksi Sampling Harian & Pakan (DOC 10 - Panen)</h3>
+                        <span class="text-xs text-ocean-600 font-medium">Interval 10 Hari</span>
+                    </div>
+                    <div class="overflow-x-auto max-h-80">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 text-slate-600 text-xs uppercase font-semibold sticky top-0">
+                                <tr>
+                                    <th class="px-4 py-2.5">DOC (Hari)</th>
+                                    <th class="px-4 py-2.5">Estimasi ABW (gram)</th>
+                                    <th class="px-4 py-2.5">FR (% Biomassa)</th>
+                                    <th class="px-4 py-2.5">Est. Biomassa (kg)</th>
+                                    <th class="px-4 py-2.5">Pakan Harian (kg)</th>
+                                    <th class="px-4 py-2.5">Pakan Kumulatif (kg)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="docTableBody" class="divide-y divide-slate-100 text-slate-700 text-xs">
+                                <!-- Populated dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: ESTIMASI BIAYA USAHA (CAPEX & OPEX) -->
+            <div id="content-biaya" class="tab-content hidden space-y-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    
+                    <!-- CAPEX Block -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="wrench" class="w-4 h-4 text-ocean-600"></i>
+                                <h3 class="font-semibold text-slate-800 text-sm">CAPEX (Modal Investasi Alat)</h3>
+                            </div>
+                            <span class="text-xs font-bold text-slate-700" id="capexTotalBadge">Rp 15.000.000</span>
+                        </div>
+                        <ul class="space-y-2 text-xs">
+                            <li class="flex justify-between py-1.5 border-b border-slate-50">
+                                <span class="text-slate-600">Konstruksi Tambak / Kolam</span>
+                                <span class="font-medium text-slate-800">Rp 7.000.000</span>
+                            </li>
+                            <li class="flex justify-between py-1.5 border-b border-slate-50">
+                                <span class="text-slate-600">Plastik Terpal HDPE</span>
+                                <span class="font-medium text-slate-800">Rp 3.500.000</span>
+                            </li>
+                            <li class="flex justify-between py-1.5 border-b border-slate-50">
+                                <span class="text-slate-600">Kincir Air & Aerasi</span>
+                                <span class="font-medium text-slate-800">Rp 3.000.000</span>
+                            </li>
+                            <li class="flex justify-between py-1.5">
+                                <span class="text-slate-600">Pompa & Pipa / Alat Test Kit</span>
+                                <span class="font-medium text-slate-800">Rp 1.500.000</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- OPEX Block -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="shopping-bag" class="w-4 h-4 text-amber-600"></i>
+                                <h3 class="font-semibold text-slate-800 text-sm">OPEX (Biaya Operasional / Siklus)</h3>
+                            </div>
+                            <span class="text-xs font-bold text-amber-700" id="opexTotalBadge">Rp 8.516.000</span>
+                        </div>
+                        <ul class="space-y-2 text-xs">
+                            <li class="flex justify-between py-1.5 border-b border-slate-50">
+                                <span class="text-slate-600">Pembelian Benur Udang</span>
+                                <span class="font-semibold text-slate-900" id="opexBenur">Rp 480.000</span>
+                            </li>
+                            <li class="flex justify-between py-1.5 border-b border-slate-50">
+                                <span class="text-slate-600">Pembelian Pakan Utama</span>
+                                <span class="font-semibold text-slate-900" id="opexPakan">Rp 4.284.000</span>
+                            </li>
+                            <li class="flex justify-between py-1.5 border-b border-slate-50">
+                                <span class="text-slate-600">Probiotik, Vitamin & Kapur</span>
+                                <span class="font-medium text-slate-800">Rp 750.000</span>
+                            </li>
+                            <li class="flex justify-between py-1.5">
+                                <span class="text-slate-600">Gaji & Listrik Tetap (OPEX Tetap)</span>
+                                <span class="font-semibold text-slate-900" id="opexTetapVal">Rp 3.000.000</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- TAB 4: PROYEKSI MULTI-SIKLUS CASH FLOW -->
+            <div id="content-multisiklus" class="tab-content hidden space-y-5">
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
+                    <h3 class="font-semibold text-slate-800 text-sm mb-1">Simulasi Kumulatif Arus Kas (3 Tahun / 9 Siklus)</h3>
+                    <p class="text-xs text-slate-500 mb-4">Perkiraan akumulasi kas bersih setelah memperhitungkan pengembalian modal awal (CAPEX).</p>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 text-slate-600 text-xs uppercase font-semibold">
+                                <tr>
+                                    <th class="px-4 py-3">Siklus Ke-</th>
+                                    <th class="px-4 py-3">Total Omset</th>
+                                    <th class="px-4 py-3">Biaya OPEX</th>
+                                    <th class="px-4 py-3">Laba Bersih</th>
+                                    <th class="px-4 py-3">Kumulatif Arus Kas</th>
+                                </tr>
+                            </thead>
+                            <tbody id="multiCycleBody" class="divide-y divide-slate-100 text-slate-700 text-xs">
+                                <!-- Populated dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto py-4">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
+            Kalkulator Bisnis Udang Vaname &copy; 2026 - Berbasis Logika Spreadsheet Otomatis
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Global variables for Chart
+        let chartInstance = null;
+
+        // Initialize Lucide Icons on load
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+            calculateAll();
+        });
+
+        // Toggle visibility between Kepadatan & Benur Manual
+        function toggleBenurMode() {
+            const mode = document.getElementById("modeBenur").value;
+            const containerKepadatan = document.getElementById("containerKepadatan");
+            const containerManual = document.getElementById("containerBenurManual");
+
+            if (mode === "Ukuran Tambak") {
+                containerKepadatan.classList.remove("hidden");
+                containerManual.classList.add("hidden");
+            } else {
+                containerKepadatan.classList.add("hidden");
+                containerManual.classList.remove("hidden");
+            }
+        }
+
+        // Main Calculation Engine (Identical formulas to Spreadsheet)
+        function calculateAll() {
+            // 1. Fetch Inputs
+            const panjang = parseFloat(document.getElementById("panjang").value) || 0;
+            const lebar = parseFloat(document.getElementById("lebar").value) || 0;
+            const kedalaman = parseFloat(document.getElementById("kedalaman").value) || 0;
+
+            const modeBenur = document.getElementById("modeBenur").value;
+            const kepadatan = parseFloat(document.getElementById("kepadatan").value) || 0;
+            const benurManual = parseFloat(document.getElementById("benurManual").value) || 0;
+            const hargaBenur = parseFloat(document.getElementById("hargaBenur").value) || 0;
+
+            const targetSR = parseFloat(document.getElementById("targetSR").value) || 0;
+            const targetFCR = parseFloat(document.getElementById("targetFCR").value) || 0;
+            const targetSize = parseFloat(document.getElementById("targetSize").value) || 1;
+            const lamaDOC = parseFloat(document.getElementById("lamaDOC").value) || 90;
+
+            const hargaPakan = parseFloat(document.getElementById("hargaPakan").value) || 0;
+            const hargaJual = parseFloat(document.getElementById("hargaJual").value) || 0;
+
+            const biayaCapex = parseFloat(document.getElementById("biayaCapex").value) || 0;
+            const opexTetap = parseFloat(document.getElementById("biayaOpexTetap").value) || 0;
+
+            // 2. Calculated Tambak & Benur
+            const luasTambak = panjang * lebar;
+            const volumeAir = luasTambak * kedalaman;
+
+            document.getElementById("outLuas").textContent = luasTambak.toLocaleString('id-ID') + " m²";
+            document.getElementById("outVolume").textContent = volumeAir.toLocaleString('id-ID') + " m³";
+
+            let totalBenur = 0;
+            if (modeBenur === "Ukuran Tambak") {
+                totalBenur = luasTambak * kepadatan;
+                document.getElementById("kpiLuasKepadatan").textContent = `${luasTambak}m² × ${kepadatan}/m²`;
+            } else {
+                totalBenur = benurManual;
+                document.getElementById("kpiLuasKepadatan").textContent = `Input Manual (${totalBenur.toLocaleString('id-ID')} ekor)`;
+            }
+
+            // 3. Biological Results
+            const populasiPanen = totalBenur * (targetSR / 100);
+            const biomassaPanenKg = populasiPanen / targetSize; // kg
+            const totalPakanKg = biomassaPanenKg * targetFCR; // kg
+
+            // 4. Financial Calculations
+            const biayaBenurTotal = totalBenur * hargaBenur;
+            const biayaPakanTotal = totalPakanKg * hargaPakan;
+            const biayaProbiotikObat = 750000; // Fixed estimation standard
+            const totalOpex = biayaBenurTotal + biayaPakanTotal + biayaProbiotikObat + opexTetap;
+
+            const totalRevenue = biomassaPanenKg * hargaJual;
+            const labaBersih = totalRevenue - totalOpex;
+
+            // KPIs
+            const roi = biayaCapex > 0 ? (labaBersih / (biayaCapex + totalOpex)) * 100 : 0;
+            const bcRatio = totalOpex > 0 ? totalRevenue / totalOpex : 0;
+            const bepHarga = biomassaPanenKg > 0 ? totalOpex / biomassaPanenKg : 0;
+            const bepUnit = hargaJual > 0 ? totalOpex / hargaJual : 0;
+            const paybackPeriod = labaBersih > 0 ? (biayaCapex / labaBersih) : 0;
+
+            // 5. Update UI DOM Elements
+            document.getElementById("kpiPopulasiTebar").textContent = `${Math.round(totalBenur).toLocaleString('id-ID')} ekor`;
+            document.getElementById("kpiBiomassa").textContent = `${biomassaPanenKg.toLocaleString('id-ID', {maximumFractionDigits:1})} kg`;
+            document.getElementById("kpiPopulasiPanen").textContent = `Populasi Panen: ${Math.round(populasiPanen).toLocaleString('id-ID')} ekor`;
+            document.getElementById("kpiTotalPakan").textContent = `${totalPakanKg.toLocaleString('id-ID', {maximumFractionDigits:1})} kg`;
+            document.getElementById("kpiFCRVal").textContent = `Target FCR: ${targetFCR.toFixed(2)}`;
+            document.getElementById("kpiRevenue").textContent = `Rp ${Math.round(totalRevenue).toLocaleString('id-ID')}`;
+
+            document.getElementById("kpiLabaBersih").textContent = `Rp ${Math.round(labaBersih).toLocaleString('id-ID')}`;
+            document.getElementById("kpiROI").textContent = `${roi.toFixed(1)}%`;
+            document.getElementById("kpiBCRatio").textContent = bcRatio.toFixed(2);
+            document.getElementById("kpiBEPHarga").textContent = `Rp ${Math.round(bepHarga).toLocaleString('id-ID')} / kg`;
+            document.getElementById("kpiBEPUnit").textContent = `${bepUnit.toFixed(1)} kg`;
+            document.getElementById("kpiPaybackPeriod").textContent = `${paybackPeriod.toFixed(1)} Siklus`;
+
+            // Table Rincian
+            document.getElementById("rowEkorsPanen").textContent = `${Math.round(populasiPanen).toLocaleString('id-ID')} ekor`;
+            document.getElementById("rowBiomassa").textContent = `${biomassaPanenKg.toLocaleString('id-ID', {maximumFractionDigits:1})} kg`;
+            document.getElementById("rowTotalPakan").textContent = `${totalPakanKg.toLocaleString('id-ID', {maximumFractionDigits:1})} kg`;
+            document.getElementById("rowOpexTotal").textContent = `Rp ${Math.round(totalOpex).toLocaleString('id-ID')}`;
+            document.getElementById("rowLabaBersih").textContent = `Rp ${Math.round(labaBersih).toLocaleString('id-ID')}`;
+
+            // OPEX Tab Updates
+            document.getElementById("capexTotalBadge").textContent = `Rp ${Math.round(biayaCapex).toLocaleString('id-ID')}`;
+            document.getElementById("opexTotalBadge").textContent = `Rp ${Math.round(totalOpex).toLocaleString('id-ID')}`;
+            document.getElementById("opexBenur").textContent = `Rp ${Math.round(biayaBenurTotal).toLocaleString('id-ID')}`;
+            document.getElementById("opexPakan").textContent = `Rp ${Math.round(biayaPakanTotal).toLocaleString('id-ID')}`;
+            document.getElementById("opexTetapVal").textContent = `Rp ${Math.round(opexTetap).toLocaleString('id-ID')}`;
+
+            // 6. Generate Sub-Calculations
+            updateDocTableAndChart(totalBenur, targetSR, targetSize, totalPakanKg, lamaDOC);
+            updateMultiCycleTable(biayaCapex, totalRevenue, totalOpex, labaBersih);
+        }
+
+        // Generate Sampling DOC Table & Chart Data
+        function updateDocTableAndChart(totalBenur, sr, targetSize, totalPakanKg, maxDoc) {
+            const tbody = document.getElementById("docTableBody");
+            tbody.innerHTML = "";
+
+            const labels = [];
+            const dataABW = [];
+            const dataPakanKumulatif = [];
+
+            let kumulatifPakan = 0;
+            const finalAbwGram = 1000 / targetSize; // Gram per ekor at harvest
+
+            for (let doc = 10; doc <= maxDoc; doc += 10) {
+                // Growth curve approximation
+                const progressRatio = doc / maxDoc;
+                const currentABW = Math.pow(progressRatio, 1.3) * finalAbwGram; 
+                const currentUdang = totalBenur * (1 - ((1 - (sr / 100)) * progressRatio));
+                const currentBiomassaKg = (currentUdang * currentABW) / 1000;
+                
+                // Feeding rate decreases as shrimp grow (e.g. 5% down to 2.2%)
+                const feedingRatePercent = 5.0 - (progressRatio * 2.5);
+                const dailyFeedKg = (currentBiomassaKg * (feedingRatePercent / 100));
+                
+                // Accumulate approx pakan
+                kumulatifPakan += dailyFeedKg * 10; 
+                // Cap to max total pakan at harvest
+                if (doc === maxDoc) kumulatifPakan = totalPakanKg;
+
+                labels.push(`DOC ${doc}`);
+                dataABW.push(parseFloat(currentABW.toFixed(1)));
+                dataPakanKumulatif.push(parseFloat(kumulatifPakan.toFixed(1)));
+
+                // Row DOM
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td class="px-4 py-2 font-semibold text-ocean-700">DOC ${doc}</td>
+                    <td class="px-4 py-2">${currentABW.toFixed(1)} g</td>
+                    <td class="px-4 py-2">${feedingRatePercent.toFixed(1)}%</td>
+                    <td class="px-4 py-2">${currentBiomassaKg.toFixed(1)} kg</td>
+                    <td class="px-4 py-2">${dailyFeedKg.toFixed(1)} kg/hr</td>
+                    <td class="px-4 py-2 font-semibold text-slate-800">${kumulatifPakan.toFixed(1)} kg</td>
+                `;
+                tbody.appendChild(row);
+            }
+
+            // Render Chart.js
+            renderDocChart(labels, dataABW, dataPakanKumulatif);
+        }
+
+        // Render Growth Chart
+        function renderDocChart(labels, abwData, pakanData) {
+            const ctx = document.getElementById('docChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Bobot Udang / ABW (gram)',
+                            data: abwData,
+                            borderColor: '#0284c7',
+                            backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                            yAxisID: 'yABW',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'Akumulasi Pakan (kg)',
+                            data: pakanData,
+                            borderColor: '#d97706',
+                            backgroundColor: 'rgba(217, 119, 6, 0.1)',
+                            yAxisID: 'yPakan',
+                            tension: 0.3,
+                            borderDash: [5, 5]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { family: 'Inter', size: 11 } } }
+                    },
+                    scales: {
+                        yABW: {
+                            type: 'linear',
+                            position: 'left',
+                            title: { display: true, text: 'ABW (Gram)', font: { size: 11 } }
+                        },
+                        yPakan: {
+                            type: 'linear',
+                            position: 'right',
+                            title: { display: true, text: 'Pakan Kumulatif (kg)', font: { size: 11 } },
+                            grid: { drawOnChartArea: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Populate Multi-Cycle Cashflow Table
+        function updateMultiCycleTable(capex, omset, opex, labaBersih) {
+            const tbody = document.getElementById("multiCycleBody");
+            tbody.innerHTML = "";
+
+            let kumulatifKas = -capex;
+
+            for (let cycle = 1; cycle <= 9; cycle++) {
+                kumulatifKas += labaBersih;
+                
+                const row = document.createElement("tr");
+                row.className = cycle % 2 === 0 ? "bg-slate-50/50" : "";
+                row.innerHTML = `
+                    <td class="px-4 py-2.5 font-bold text-slate-800">Siklus ${cycle}</td>
+                    <td class="px-4 py-2.5 text-slate-600">Rp ${Math.round(omset).toLocaleString('id-ID')}</td>
+                    <td class="px-4 py-2.5 text-slate-600">Rp ${Math.round(opex).toLocaleString('id-ID')}</td>
+                    <td class="px-4 py-2.5 font-semibold text-emerald-600">Rp ${Math.round(labaBersih).toLocaleString('id-ID')}</td>
+                    <td class="px-4 py-2.5 font-bold ${kumulatifKas >= 0 ? 'text-emerald-600' : 'text-rose-600'}">
+                        Rp ${Math.round(kumulatifKas).toLocaleString('id-ID')}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            }
+        }
+
+        // Switch View Tabs
+        function switchTab(tabId) {
+            document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
+            document.querySelectorAll(".tab-btn").forEach(btn => {
+                btn.classList.remove("bg-ocean-50", "text-ocean-700", "font-semibold");
+                btn.classList.add("text-slate-600", "font-medium");
+            });
+
+            document.getElementById(`content-${tabId}`).classList.remove("hidden");
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.add("bg-ocean-50", "text-ocean-700", "font-semibold");
+            activeBtn.classList.remove("text-slate-600", "font-medium");
+        }
+
+        // Reset to spreadsheet default baseline
+        function resetDefaults() {
+            document.getElementById("panjang").value = 12;
+            document.getElementById("lebar").value = 10;
+            document.getElementById("kedalaman").value = 1.5;
+
+            document.getElementById("modeBenur").value = "Ukuran Tambak";
+            document.getElementById("kepadatan").value = 100;
+            document.getElementById("benurManual").value = 12000;
+            document.getElementById("hargaBenur").value = 40;
+
+            document.getElementById("targetSR").value = 85;
+            document.getElementById("targetFCR").value = 1.2;
+            document.getElementById("targetSize").value = 50;
+            document.getElementById("lamaDOC").value = 90;
+
+            document.getElementById("hargaPakan").value = 17500;
+            document.getElementById("hargaJual").value = 75000;
+            document.getElementById("biayaCapex").value = 15000000;
+            document.getElementById("biayaOpexTetap").value = 3500000;
+
+            toggleBenurMode();
+            calculateAll();
+        }
+    </script>
+</body>
+</html>
